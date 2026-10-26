@@ -9,7 +9,7 @@ dependency versions or install a separate global PHPUnit.
 - GitHub-hosted `ubuntu-22.04`, with PHP installed explicitly by
   `shivammathur/setup-php@v2` (the runner's default PHP is not used).
 - PHP 7.2 and 7.3, with Composer 2.2 LTS. These are legacy compatibility
-  baselines for the locked Laravel 5.8.27 and PHPUnit 7.5.13 dependencies, not
+  baselines for the locked Laravel 5.8.38 and PHPUnit 7.5.13 dependencies, not
   a claim that every PHP version allowed by `composer.json` has been tested.
   The lock also contains Carbon 2.20.0, requiring at least PHP 7.1.8.
 - Composer 1 is obsolete; do not use it for new CI. Pinning Composer's 2.2
@@ -31,6 +31,22 @@ silently skip failing tests.
 Webpack asset build. The present tests do not render an asset-dependent page,
 so Node/npm are not needed by this PHPUnit job. This workflow does not claim
 to validate the frontend build.
+
+## Composer 2 compatibility
+
+The original lock used Laravel 5.8.27. Its package discovery reads Composer
+1 metadata as a flat package list and fails with `Undefined index: name`
+when Composer 2 writes `installed.json` with a `packages` key. This change
+updates only `laravel/framework` to 5.8.38 within the existing `5.8.*`
+constraint, which supports both metadata formats. All other locked package
+versions are unchanged. The lock was refreshed once with:
+
+```bash
+composer update laravel/framework:5.8.38 --no-scripts --no-interaction --no-progress
+```
+
+`--no-scripts` was used only to prepare the lock update. CI still runs
+`composer install` with scripts enabled, including package discovery.
 
 ## Reproduce locally
 
