@@ -1,0 +1,60 @@
+name: PHP CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: PHPUnit (PHP ${{ matrix.php }})
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # Test the locked Laravel 5.8 / PHPUnit 7.5 dependencies on legacy PHP.
+        php: ['7.2', '7.3']
+    env:
+      APP_ENV: testing
+      CACHE_DRIVER: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      MAIL_DRIVER: array
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: ctype, curl, dom, fileinfo, iconv, json, mbstring, openssl, pdo, pdo_mysql, tokenizer, xml, xmlwriter, zip
+          tools: composer:2.2
+          coverage: none
+
+      - name: Prepare environment
+        run: cp .env.example .env
+
+      - name: Validate Composer manifest and lock file
+        run: |
+          test -f composer.lock
+          composer validate --no-check-publish
+
+      - name: Install locked dependencies (including PHPUnit)
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Check platform requirements
+        run: composer check-platform-reqs
+
+      - name: Generate application key
+        run: php artisan key:generate --ansi
+
+      - name: Run Unit and Feature tests
+        run: vendor/bin/phpunit --configuration phpunit.xml

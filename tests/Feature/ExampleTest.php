@@ -8,14 +8,15 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 class ExampleTest extends TestCase
 {
     /**
-     * A basic test example.
+     * The homepage redirects to the existing catalogue route.
      *
      * @return void
      */
-    public function testBasicTest()
+    public function testHomepageRedirectsToCatalogue()
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        $response->assertStatus(302);
+        $response->assertRedirect('/censored?');
     }
 }
